@@ -2,11 +2,15 @@ package main
 
 import (
 	"log"
+	"net/http"
 	"os"
 	"vk_test/internal/app"
+	handlerActors "vk_test/internal/handlers/actors"
+	handlerFilms "vk_test/internal/handlers/films"
+	"vk_test/internal/httpserver"
 	"vk_test/internal/infrastucture/inmemory"
-	"vk_test/internal/services/actors"
-	"vk_test/internal/services/films"
+	serviceActors "vk_test/internal/services/actors"
+	serviceFilms "vk_test/internal/services/films"
 )
 
 const (
@@ -16,6 +20,7 @@ const (
 func main() {
 	// init logger
 	logger := log.Default()
+	logger.Println("service started ...")
 
 	// init config
 	config, err := app.NewConfig(configPath)
@@ -28,10 +33,18 @@ func main() {
 	mainStorage := inmemory.NewStorage()
 
 	// init services
-	actorService := actors.NewService(mainStorage)
-	filmService := films.NewService(mainStorage)
+	actorService := serviceActors.NewService(mainStorage)
+	filmService := serviceFilms.NewService(mainStorage)
 
 	// init handlers
+	actorHandler := handlerActors.NewHandler(actorService)
+	filmsHandler := handlerFilms.NewHandler(filmService)
+
+	mux := http.NewServeMux()
 
 	// start server
+	srv := httpserver.NewServer(config, logger, mux)
+	srv.SetupHTTPService(mux, actorHandler, filmsHandler)
+
+	srv.Run()
 }
