@@ -3,7 +3,7 @@ package model
 import "time"
 
 type Film struct {
-	Title        string
+	Title        string // id
 	Description  string
 	DateCreation time.Time
 	Rating       int

@@ -12,6 +12,13 @@ type Config struct {
 	HTTPReadTimeout  time.Duration
 	HTTPWriteTimeout time.Duration
 	HTTPIdleTimeout  time.Duration
+
+	PG_HOST     string
+	PG_PASSWORD string
+	PG_PORT     string
+	PG_DBNAME   string
+	PG_USER     string
+	PG_SSLMODE  string
 }
 
 func NewConfig(config_path string) (Config, error) {

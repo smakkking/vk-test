@@ -8,7 +8,7 @@ import (
 	handlerActors "vk_test/internal/handlers/actors"
 	handlerFilms "vk_test/internal/handlers/films"
 	"vk_test/internal/httpserver"
-	"vk_test/internal/infrastucture/inmemory"
+	"vk_test/internal/infrastucture/postgres"
 	serviceActors "vk_test/internal/services/actors"
 	serviceFilms "vk_test/internal/services/films"
 )
@@ -30,7 +30,11 @@ func main() {
 	}
 
 	// init db
-	mainStorage := inmemory.NewStorage()
+	mainStorage, err := postgres.NewStorage(config)
+	if err != nil {
+		os.Exit(1)
+		logger.Fatalf("error connecting to db: %s", err.Error())
+	}
 
 	// init services
 	actorService := serviceActors.NewService(mainStorage)

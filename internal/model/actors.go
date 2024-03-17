@@ -3,7 +3,7 @@ package model
 import "time"
 
 type Actor struct {
-	Name      string
+	Name      string // id
 	Sex       string
 	DateBirth time.Time
 }

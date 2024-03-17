@@ -3,6 +3,8 @@ package actors
 import (
 	"fmt"
 	"net/http"
+	"time"
+	"vk_test/internal/model"
 	"vk_test/internal/services/actors"
 )
 
@@ -18,10 +20,25 @@ func NewHandler(service *actors.Service) *Handler {
 
 func (h *Handler) CreateActor(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
-		_, err := h.serviceActors.CreateActor()
+		var err error
+
+		actor := new(model.Actor)
+		actor.Name = req.PostFormValue("name")
+		actor.Sex = req.PostFormValue("sex")
+		actor.DateBirth, err = time.Parse("02-01-2006", req.PostFormValue("date_birth"))
 		if err != nil {
-			http.Error(w, fmt.Sprintf("expect method POST at %s, got %v", req.URL.Path, req.Method), http.StatusAccepted)
+			http.Error(w, "invalid date format", http.StatusInternalServerError)
+			return
 		}
+
+		err = h.serviceActors.CreateActor(actor)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("error while creating actor %v", err.Error()), http.StatusAccepted)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+
 	} else {
 		http.Error(w, fmt.Sprintf("expect method POST at %s, got %v", req.URL.Path, req.Method), http.StatusMethodNotAllowed)
 	}
