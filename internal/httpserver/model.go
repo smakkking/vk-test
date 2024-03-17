@@ -19,7 +19,7 @@ func NewServer(cfg app.Config, logger *log.Logger, mux *http.ServeMux) *HTTPServ
 	return &HTTPService{
 		logger: logger,
 		srv: http.Server{
-			Addr:         cfg.Address,
+			Addr:         cfg.HTTPAddress,
 			Handler:      mux,
 			ReadTimeout:  cfg.HTTPReadTimeout,
 			WriteTimeout: cfg.HTTPWriteTimeout,

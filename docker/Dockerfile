@@ -2,6 +2,6 @@ FROM golang:alpine
 
 COPY . .
 
-RUN go build -o main ./service/service.go
+RUN go build -o main ./cmd/service/service.go
 
 CMD ["./main"]

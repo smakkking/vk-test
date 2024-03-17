@@ -9,6 +9,12 @@ type Storage struct {
 	Films  map[string]*model.Film
 }
 
-func (s *Storage) Create(*model.Actor) error {
+func (s *Storage) Create(actor *model.Actor) error {
+	s.Actors[actor.Name] = actor
+	return nil
+}
+
+func (s *Storage) Delete(actorName string) error {
+	delete(s.Actors, actorName)
 	return nil
 }

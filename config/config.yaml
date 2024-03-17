@@ -1,0 +1,11 @@
+HTTP_ADDRESS: "localhost:8080"
+HTTP_READ_TIMEOUT: 5s
+HTTP_WRITE_TIMEOUT: 5s
+HTTP_IDLE_TIMEOUT: 10s
+
+PG_HOST: "localhost"
+PG_PORT: "5432"
+PG_DBNAME: "my_db"
+PG_USER: "postgres"
+PG_PASSWORD: "my-password"
+PG_SSLMODE: "disable"

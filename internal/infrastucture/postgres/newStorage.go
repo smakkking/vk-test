@@ -14,7 +14,7 @@ func NewStorage(cfg app.Config) (*Storage, error) {
 
 	database_url := fmt.Sprintf(
 		"host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
-		cfg.PG_HOST,
+		cfg.PgHost,
 		cfg.PG_PORT,
 		cfg.PG_DBNAME,
 		cfg.PG_USER,

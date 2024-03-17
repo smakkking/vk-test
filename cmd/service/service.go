@@ -8,7 +8,7 @@ import (
 	handlerActors "vk_test/internal/handlers/actors"
 	handlerFilms "vk_test/internal/handlers/films"
 	"vk_test/internal/httpserver"
-	"vk_test/internal/infrastucture/postgres"
+	"vk_test/internal/infrastucture/inmemory"
 	serviceActors "vk_test/internal/services/actors"
 	serviceFilms "vk_test/internal/services/films"
 )
@@ -25,15 +25,15 @@ func main() {
 	// init config
 	config, err := app.NewConfig(configPath)
 	if err != nil {
-		os.Exit(1)
 		logger.Fatalf("error reading config: %s", err.Error())
+		os.Exit(1)
 	}
 
 	// init db
-	mainStorage, err := postgres.NewStorage(config)
+	mainStorage, err := inmemory.NewStorage()
 	if err != nil {
-		os.Exit(1)
 		logger.Fatalf("error connecting to db: %s", err.Error())
+		os.Exit(1)
 	}
 
 	// init services
