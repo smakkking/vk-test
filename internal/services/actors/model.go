@@ -12,16 +12,17 @@ type Service struct {
 type Storage interface {
 	CreateActor(*model.Actor) (int, error)
 	DeleteActor(int) error
-	UpdateActor(int, *model.Actor) error
+	UpdateActor(int, *model.ActorPartialUpdate) error
 	GetActorsWithFilms() ([]*model.ActorWithFilms, error)
 }
 
 func (s *Service) CreateActor(actor *model.Actor) (int, error) {
 	id, err := s.actorStorage.CreateActor(actor)
 	if err != nil {
-		return id, fmt.Errorf("can't create actor: %w", err)
+		return 0, fmt.Errorf("can't create actor: %w", err)
 	}
-	return 0, nil
+
+	return id, nil
 }
 
 func (s *Service) DeleteActor(actorID int) error {
@@ -33,7 +34,7 @@ func (s *Service) DeleteActor(actorID int) error {
 	return nil
 }
 
-func (s *Service) UpdateActor(id int, newActor *model.Actor) error {
+func (s *Service) UpdateActor(id int, newActor *model.ActorPartialUpdate) error {
 	err := s.actorStorage.UpdateActor(id, newActor)
 	if err != nil {
 		return fmt.Errorf("can't update actor: %w", err)

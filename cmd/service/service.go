@@ -1,16 +1,17 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"vk_test/internal/app"
 	handlerActors "vk_test/internal/handlers/actors"
 	handlerFilms "vk_test/internal/handlers/films"
 	"vk_test/internal/httpserver"
-	"vk_test/internal/infrastucture/inmemory"
+	"vk_test/internal/infrastucture/postgres"
 	serviceActors "vk_test/internal/services/actors"
 	serviceFilms "vk_test/internal/services/films"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -18,21 +19,26 @@ const (
 )
 
 func main() {
-	// init logger
-	logger := log.Default()
-	logger.Println("service started ...")
+	// logger setup
+	logrus.SetFormatter(
+		&logrus.JSONFormatter{
+			PrettyPrint:     true,
+			TimestampFormat: "2006-01-02 15:04:05",
+		},
+	)
+	logrus.SetOutput(os.Stdout)
 
 	// init config
 	config, err := app.NewConfig(configPath)
 	if err != nil {
-		logger.Fatalf("error reading config: %s", err.Error())
+		logrus.Errorf("error reading config: %s", err.Error())
 		os.Exit(1)
 	}
 
 	// init db
-	mainStorage, err := inmemory.NewStorage()
+	mainStorage, err := postgres.NewStorage(config)
 	if err != nil {
-		logger.Fatalf("error connecting to db: %s", err.Error())
+		logrus.Errorf("error connecting to db: %s", err.Error())
 		os.Exit(1)
 	}
 
@@ -47,7 +53,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// start server
-	srv := httpserver.NewServer(config, logger, mux)
+	srv := httpserver.NewServer(config, mux)
 	srv.SetupHTTPService(mux, actorHandler, filmsHandler)
 
 	srv.Run()

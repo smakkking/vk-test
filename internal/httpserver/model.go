@@ -11,13 +11,11 @@ import (
 )
 
 type HTTPService struct {
-	srv    http.Server
-	logger *log.Logger
+	srv http.Server
 }
 
-func NewServer(cfg app.Config, logger *log.Logger, mux *http.ServeMux) *HTTPService {
+func NewServer(cfg app.Config, mux *http.ServeMux) *HTTPService {
 	return &HTTPService{
-		logger: logger,
 		srv: http.Server{
 			Addr:         cfg.HTTPAddress,
 			Handler:      mux,
@@ -59,5 +57,4 @@ func (h *HTTPService) SetupHTTPService(
 	mux.HandleFunc("/films/create", filmsHandler.CreateFilm)
 	mux.HandleFunc("/films/{id}/delete", filmsHandler.DeleteFilm)
 	mux.HandleFunc("/films/{id}/update", filmsHandler.UpdateFilm)
-
 }

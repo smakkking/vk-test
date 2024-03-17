@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 	"vk_test/internal/model"
 	"vk_test/internal/services/actors"
 )
@@ -32,14 +31,16 @@ func (h *Handler) UpdateActor(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		oldActor := new(model.Actor)
-		oldActor.Name = req.PostFormValue("name")
-		oldActor.Sex = req.PostFormValue("sex")
-		oldActor.DateBirth, err = time.Parse("02-01-2006", req.PostFormValue("date_birth"))
+		oldActor := new(model.ActorPartialUpdate)
+		err = json.NewDecoder(req.Body).Decode(&oldActor)
 		if err != nil {
-			http.Error(w, "invalid date format", http.StatusInternalServerError)
+			http.Error(w, "invalid data", http.StatusBadRequest)
 			return
 		}
+
+		oldActor.NameBool = oldActor.Name != ""
+		oldActor.DateBirthBool = !oldActor.DateBirth.IsZero()
+		oldActor.SexBool = oldActor.Sex != ""
 
 		err = h.serviceActors.UpdateActor(id, oldActor)
 		if err != nil {
@@ -84,14 +85,10 @@ type CreateActorResponce struct {
 
 func (h *Handler) CreateActor(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
-		var err error
-
 		actor := new(model.Actor)
-		actor.Name = req.PostFormValue("name")
-		actor.Sex = req.PostFormValue("sex")
-		actor.DateBirth, err = time.Parse("02-01-2006", req.PostFormValue("date_birth"))
+		err := json.NewDecoder(req.Body).Decode(&actor)
 		if err != nil {
-			http.Error(w, "invalid date format", http.StatusInternalServerError)
+			http.Error(w, "invalid data", http.StatusBadRequest)
 			return
 		}
 

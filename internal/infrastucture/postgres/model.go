@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 	"time"
 	"vk_test/internal/model"
@@ -36,37 +35,23 @@ func (s *Storage) DeleteActor(actorID int) error {
 	return nil
 }
 
-func (s *Storage) UpdateActor(actorID int, actor *model.Actor) error {
+func (s *Storage) UpdateActor(actorID int, actor *model.ActorPartialUpdate) error {
 	b := strings.Builder{}
-	b.WriteString("UPDATE Actors SET ")
+	b.WriteString(`
+		UPDATE Actors 
+		SET 
+			a_name = CASE WHEN $1::boolean THEN $2::TEXT ELSE a_name END,
+			a_sex = CASE WHEN $3::boolean THEN $4::SEX ELSE a_sex END,
+			a_birth_date = CASE WHEN $5::boolean THEN $6::DATE ELSE a_birth_date END,
+		WHERE a_id = $7;
+	`)
 
-	c := 1
-	params := make([]interface{}, 0)
-
-	if actor.Name != "" {
-		b.WriteString(fmt.Sprintf("a_name = $%d", c))
-		params = append(params, actor.Name)
-		c++
-	}
-
-	if actor.Sex != "" {
-		b.WriteString(fmt.Sprintf("a_sex = $%d", c))
-		params = append(params, actor.Sex)
-		c++
-
-	}
-
-	// TODO: костыль
-	e := time.Time{}
-	if actor.DateBirth != e {
-		b.WriteString(fmt.Sprintf("a_birth_date = $%d", c))
-		params = append(params, actor.DateBirth)
-		c++
-	}
-
-	b.WriteString(fmt.Sprintf("WHERE a_id = $%d", c))
-
-	_, err := s.db.Exec(b.String(), params...)
+	_, err := s.db.Exec(
+		b.String(),
+		actor.NameBool, actor.Name,
+		actor.SexBool, actor.Sex,
+		actor.DateBirthBool, actor.DateBirth,
+	)
 	if err != nil {
 		return err
 	}
@@ -117,6 +102,62 @@ func (s *Storage) DeleteFilm(filmID int) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (s *Storage) UpdateFilm(filmID int, film *model.FilmPartialUpdate) error {
+	b := strings.Builder{}
+	b.WriteString(`
+		UPDATE Films 
+		SET 
+		f_title = CASE WHEN $1::boolean THEN $2::VARCHAR(150) ELSE f_title END,
+		f_desc = CASE WHEN $3::boolean THEN $4::VARCHAR(1000) ELSE f_desc END,
+		f_date_creation = CASE WHEN $5::boolean THEN $6::DATE ELSE f_date_creation END,
+		f_rating = CASE WHEN $7::boolean THEN $8::INT ELSE f_rating END,
+		
+		WHERE a_id = $9;
+	`)
+
+	// делаем в транзакции
+	tX, err := s.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tX.Exec(
+		b.String(),
+		film.TitleBool, film.Title,
+		film.DescriptionBool, film.Description,
+		film.DateCreationBool, film.DateCreation,
+		film.RatingBool, film.Rating,
+		filmID,
+	)
+	if err != nil {
+		_ = tX.Rollback()
+		return err
+	}
+
+	if film.ActorIDListBool {
+		_, err = tX.Exec("DELETE FROM ActorToFilm WHERE film_id = $1", filmID)
+		if err != nil {
+			_ = tX.Rollback()
+			return err
+		}
+
+		for _, actorID := range film.ActorIDList {
+			_, err := tX.Exec(
+				"INSERT INTO ActorToFilm(actor_id, film_id) VALUES($1, $2)",
+				actorID,
+				filmID,
+			)
+			if err != nil {
+				_ = tX.Rollback()
+				return err
+			}
+		}
+	}
+	_ = tX.Commit()
+
 	return nil
 }
 
@@ -189,13 +230,15 @@ func (s *Storage) GetFilmsSorted(sortKey string) ([]*model.FilmWithActors, error
 
 func (s *Storage) SearchFilmsByActorName(actorName string) ([]*model.FilmWithActors, error) {
 	b := strings.Builder{}
-	b.WriteString("SELECT f.f_id, f.f_title, f.f_desc, f.f_date_creation, f.f_rating, a.a_name, a.a_sex, a.a_birth_date ")
-	b.WriteString("FROM ")
-	b.WriteString("Films AS f ")
-	b.WriteString("JOIN ActorToFilm AS atf ON f.f_id = atf.film_id ")
-	b.WriteString("JOIN Actors AS a ON a.a_id = atf.actor_id ")
-	b.WriteString("WHERE a.a_name LIKE '%$1%' ")
-	b.WriteString("ORDER BY f.f_id ")
+	b.WriteString(`
+		SELECT f.f_id, f.f_title, f.f_desc, f.f_date_creation, f.f_rating, a.a_name, a.a_sex, a.a_birth_date
+		FROM
+			Films AS f
+				JOIN ActorToFilm AS atf ON f.f_id = atf.film_id
+				JOIN Actors AS a ON a.a_id = atf.actor_id
+		WHERE a.a_name LIKE '%$1%'
+		ORDER BY f.f_id;
+	`)
 
 	rows, err := s.db.Query(b.String(), actorName)
 	if err != nil {
@@ -249,13 +292,15 @@ func (s *Storage) SearchFilmsByActorName(actorName string) ([]*model.FilmWithAct
 
 func (s *Storage) SearchFilmByTitle(filmTitle string) ([]*model.FilmWithActors, error) {
 	b := strings.Builder{}
-	b.WriteString("SELECT f.f_id, f.f_title, f.f_desc, f.f_date_creation, f.f_rating, a.a_name, a.a_sex, a.a_birth_date ")
-	b.WriteString("FROM ")
-	b.WriteString("Films AS f ")
-	b.WriteString("JOIN ActorToFilm AS atf ON f.f_id = atf.film_id ")
-	b.WriteString("JOIN Actors AS a ON a.a_id = atf.actor_id ")
-	b.WriteString("WHERE f.f_title LIKE '%$1%' ")
-	b.WriteString("ORDER BY f.f_id ")
+	b.WriteString(`
+		SELECT f.f_id, f.f_title, f.f_desc, f.f_date_creation, f.f_rating, a.a_name, a.a_sex, a.a_birth_date
+		FROM
+			Films AS f
+				JOIN ActorToFilm AS atf ON f.f_id = atf.film_id
+				JOIN Actors AS a ON a.a_id = atf.actor_id
+		WHERE f.f_title LIKE '%$1%'
+		ORDER BY f.f_id;
+	`)
 
 	rows, err := s.db.Query(b.String(), filmTitle)
 	if err != nil {
@@ -309,12 +354,14 @@ func (s *Storage) SearchFilmByTitle(filmTitle string) ([]*model.FilmWithActors, 
 
 func (s *Storage) GetActorsWithFilms() ([]*model.ActorWithFilms, error) {
 	b := strings.Builder{}
-	b.WriteString("SELECT a.a_id, a.a_name, a.a_sex, a.a_birth_date, f.f_title, f.f_desc, f.f_date_creation, f.f_rating ")
-	b.WriteString("FROM ")
-	b.WriteString("Actors as a ")
-	b.WriteString("JOIN ActorToFilm AS atf ON a.a_id = atf.actor_id ")
-	b.WriteString("JOIN Films as f ON f.f_id = atf.film_id ")
-	b.WriteString("ORDER BY a.a_id ")
+	b.WriteString(`
+		SELECT a.a_id, a.a_name, a.a_sex, a.a_birth_date, f.f_title, f.f_desc, f.f_date_creation, f.f_rating
+		FROM
+			Actors as a
+				JOIN ActorToFilm AS atf ON a.a_id = atf.actor_id
+				JOIN Films as f ON f.f_id = atf.film_id
+		ORDER BY a.a_id;
+	`)
 
 	rows, err := s.db.Query(b.String())
 	if err != nil {
