@@ -18,6 +18,22 @@ func NewHandler(service *actors.Service) *Handler {
 	}
 }
 
+func (h *Handler) DeleteActor(w http.ResponseWriter, req *http.Request) {
+	if req.Method == http.MethodDelete {
+		var err error
+
+		actorName := req.PostFormValue("name")
+		err = h.serviceActors.DeleteActor(actorName)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("error while deleting actor %v", err.Error()), http.StatusAccepted)
+			return
+		}
+
+	} else {
+		http.Error(w, fmt.Sprintf("expect method DELETE at %s, got %v", req.URL.Path, req.Method), http.StatusMethodNotAllowed)
+	}
+}
+
 func (h *Handler) CreateActor(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		var err error

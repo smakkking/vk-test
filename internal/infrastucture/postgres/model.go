@@ -19,4 +19,13 @@ func (s *Storage) Create(actor *model.Actor) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (s *Storage) Delete(actorName string) error {
+	_, err := s.db.Exec("DELETE FROM Actors WHERE a_name = $1)", actorName)
+	if err != nil {
+		return err
+	}
+	return nil
 }

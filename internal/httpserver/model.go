@@ -47,6 +47,7 @@ func (h *HTTPService) SetupHTTPService(
 ) {
 	// ---ACTORS---
 	mux.HandleFunc("/actors/create", actorHandler.CreateActor)
+	mux.HandleFunc("/actors/delete", actorHandler.DeleteActor)
 
 	// ---FILMS---
 }
