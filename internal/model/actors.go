@@ -3,14 +3,14 @@ package model
 import "time"
 
 type Actor struct {
-	Name      string // id
-	Sex       string
-	DateBirth time.Time
+	Name      string    `json:"name"`
+	Sex       string    `json:"sex"`
+	DateBirth time.Time `json:"date_birth"`
 }
 
 type ActorWithFilms struct {
-	Name      string
-	Sex       string
-	DateBirth time.Time
-	Films     []*FilmMinInfo
+	Name      string         `json:"name"`
+	Sex       string         `json:"sex"`
+	DateBirth time.Time      `json:"date_birth"`
+	Films     []*FilmMinInfo `json:"films"`
 }
