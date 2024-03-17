@@ -1,24 +1,27 @@
 CREATE TYPE sex AS ENUM('мужчина', 'женщина');
 CREATE TABLE Actors (
+    a_id INT SERIAL,
     a_name TEXT NOT NULL,
     a_sex sex NOT NULL,
     a_birth_date DATE NOT NULL,
-    PRIMARY KEY (a_name)
+    PRIMARY KEY (a_id)
 );
 CREATE TABLE Films (
+    f_id INT SERIAL,
     f_title VARCHAR(150) NOT NULL,
     f_desc VARCHAR(1000),
+    f_date_creation DATE NOT NULL,
     f_rating INT,
     CHECK (
-        f_rating >= 0
-        AND f_rating <= 10
+        film_rating >= 0
+        AND film_rating <= 10
     ),
-    PRIMARY KEY (f_title)
+    PRIMARY KEY (f_id)
 );
 CREATE TABLE ActorToFilm(
-    actor_name TEXT NOT NULL,
-    film_title VARCHAR(150) NOT NULL,
-    PRIMARY KEY (actor_name, film_title),
-    FOREIGN KEY (actor_name) REFERENCES Actors(a_name) ON DELETE CASCADE,
-    FOREIGN KEY (film_title) REFERENCES Films(f_title) ON DELETE CASCADE,
+    actor_id INT,
+    film_id INT,
+    PRIMARY KEY (actor_id, film_id),
+    FOREIGN KEY (actor_id) REFERENCES Actors(a_id) ON DELETE CASCADE,
+    FOREIGN KEY (film_id) REFERENCES Films(f_id) ON DELETE CASCADE,
 );

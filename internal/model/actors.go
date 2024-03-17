@@ -12,5 +12,5 @@ type ActorWithFilms struct {
 	Name      string
 	Sex       string
 	DateBirth time.Time
-	Films     []*Film
+	Films     []*FilmMinInfo
 }
