@@ -5,7 +5,7 @@ clean:
 	rm -f ${APP_NAME}
 
 build: clean
-	go build -mod=mod -o ${APP_NAME} ./cmd/service/service.go
+	go build -mod vendor -o ${APP_NAME} ./cmd/service/service.go
 
 run: build
 	./${APP_NAME}
