@@ -12,10 +12,21 @@ import (
 )
 
 type HTTPService struct {
-	srv http.Server
+	srv        http.Server
+	rolesStore []User
+}
+
+type User struct {
+	Name     string
+	Password string
+	Role     string
 }
 
 func NewServer(cfg app.Config, mux *http.ServeMux) *HTTPService {
+	rStore := make([]User, 0)
+	rStore = append(rStore, User{Name: "alex", Password: "12345", Role: "admin"})
+	rStore = append(rStore, User{Name: "dave", Password: "1200005", Role: "user"})
+
 	return &HTTPService{
 		srv: http.Server{
 			Addr:         cfg.HTTPAddress,
@@ -24,6 +35,7 @@ func NewServer(cfg app.Config, mux *http.ServeMux) *HTTPService {
 			WriteTimeout: cfg.HTTPWriteTimeout,
 			IdleTimeout:  cfg.HTTPIdleTimeout,
 		},
+		rolesStore: rStore,
 	}
 }
 
@@ -45,17 +57,17 @@ func (h *HTTPService) SetupHTTPService(
 	filmsHandler *films.Handler,
 ) {
 	// ---ACTORS---
-	mux.HandleFunc("/actors", reqIDMiddleware(actorHandler.GetActors))
+	mux.HandleFunc("/actors", reqIDMiddleware(h.authenticateUser(actorHandler.GetActors)))
 
-	mux.HandleFunc("/actors/create", reqIDMiddleware(actorHandler.CreateActor))
-	mux.HandleFunc("/actors/{id}/delete", reqIDMiddleware(actorHandler.DeleteActor))
-	mux.HandleFunc("/actors/{id}/update", reqIDMiddleware(actorHandler.UpdateActor))
+	mux.HandleFunc("/actors/create", reqIDMiddleware(h.authenticateAdmin(actorHandler.CreateActor)))
+	mux.HandleFunc("/actors/{id}/delete", reqIDMiddleware(h.authenticateAdmin(actorHandler.DeleteActor)))
+	mux.HandleFunc("/actors/{id}/update", reqIDMiddleware(h.authenticateAdmin(actorHandler.UpdateActor)))
 
 	// ---FILMS---
-	mux.HandleFunc("/films", reqIDMiddleware(filmsHandler.GetFilms))
-	mux.HandleFunc("/films/search", reqIDMiddleware(filmsHandler.SearchFilms))
+	mux.HandleFunc("/films", reqIDMiddleware(h.authenticateUser(filmsHandler.GetFilms)))
+	mux.HandleFunc("/films/search", reqIDMiddleware(h.authenticateUser(filmsHandler.SearchFilms)))
 
-	mux.HandleFunc("/films/create", reqIDMiddleware(filmsHandler.CreateFilm))
-	mux.HandleFunc("/films/{id}/delete", reqIDMiddleware(filmsHandler.DeleteFilm))
-	mux.HandleFunc("/films/{id}/update", reqIDMiddleware(filmsHandler.UpdateFilm))
+	mux.HandleFunc("/films/create", reqIDMiddleware(h.authenticateAdmin(filmsHandler.CreateFilm)))
+	mux.HandleFunc("/films/{id}/delete", reqIDMiddleware(h.authenticateAdmin(filmsHandler.DeleteFilm)))
+	mux.HandleFunc("/films/{id}/update", reqIDMiddleware(h.authenticateAdmin(filmsHandler.UpdateFilm)))
 }

@@ -4,7 +4,7 @@ HTTP_WRITE_TIMEOUT: 5s
 HTTP_IDLE_TIMEOUT: 10s
 
 PG_HOST: "localhost"
-PG_PORT: "5432"
+PG_PORT: "7557"
 PG_DBNAME: "my_db"
 PG_USER: "postgres"
 PG_PASSWORD: "my-password"

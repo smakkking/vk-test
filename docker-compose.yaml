@@ -1,0 +1,41 @@
+version: "3.9"
+services:
+  my_app:
+    build: .
+    container_name: my_app
+
+    ports:
+      - "8080:8080"
+
+    networks:
+      - postgres
+
+  postgres:
+    image: postgres:13.3
+    container_name: my_postgres
+
+    environment:
+      POSTGRES_DB: "vk"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+
+    restart: always
+
+    volumes:
+      - .:/docker-entrypoint-initdb.d
+      - postgres_db:/var/lib/postgresql/data
+
+    ports:
+      - "7557:5432"
+
+    networks:
+      - postgres
+
+volumes:
+  postgres_db:
+    driver: local
+
+networks:
+  postgres:
+    driver: bridge
