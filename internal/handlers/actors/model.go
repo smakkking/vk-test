@@ -30,6 +30,18 @@ func NewHandler(service *actors.Service) *Handler {
 	}
 }
 
+// @Summary UpdateActor
+// @Security BasicAuth
+// @Tags actors
+// @Description обновление информации об актере
+// @Accept json
+// @Param actor_id path int true "идентификатор актера"
+// @Param input body model.Actor true "данные актера"
+// @Success 200
+// @Failure 400
+// @Failure 405
+// @Failure 500
+// @Router /actors/{actor_id}/update [put]
 func (h *Handler) UpdateActor(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPut {
 		var err error
@@ -69,6 +81,16 @@ func (h *Handler) UpdateActor(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// @Summary DeleteActor
+// @Security BasicAuth
+// @Tags actors
+// @Description удаление актера
+// @Param actor_id path int true "идентификатор актера"
+// @Success 200
+// @Failure 400
+// @Failure 405
+// @Failure 500
+// @Router /actors/{actor_id}/delete [delete]
 func (h *Handler) DeleteActor(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodDelete {
 		var err error
@@ -98,6 +120,18 @@ type CreateActorResponce struct {
 	ID int `json:"id"`
 }
 
+// @Summary CreateActor
+// @Security BasicAuth
+// @Tags actors
+// @Description создание актера
+// @Accept json
+// @Produce json
+// @Param input body model.Actor true "данные актера"
+// @Success 200 {integer} integer 1
+// @Failure 400
+// @Failure 405
+// @Failure 500
+// @Router /actors/create [post]
 func (h *Handler) CreateActor(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		actor := new(model.Actor)
@@ -123,6 +157,15 @@ func (h *Handler) CreateActor(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// @Summary GetActors
+// @Tags actors
+// @Description получить список всех актеров, с фильмами где они снимались
+// @Produce json
+// @Success 200 {array} model.ActorWithFilms
+// @Failure 400
+// @Failure 405
+// @Failure 500
+// @Router /actors [get]
 func (h *Handler) GetActors(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodGet {
 		actors, err := h.serviceActors.GetActors()

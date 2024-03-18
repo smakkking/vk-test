@@ -1,11 +1,329 @@
 basePath: /
+definitions:
+  model.Actor:
+    properties:
+      date_birth:
+        type: string
+      name:
+        type: string
+      sex:
+        type: string
+    type: object
+  model.ActorWithFilms:
+    properties:
+      date_birth:
+        type: string
+      films:
+        items:
+          $ref: '#/definitions/model.FilmMinInfo'
+        type: array
+      name:
+        type: string
+      sex:
+        type: string
+    type: object
+  model.Film:
+    properties:
+      actors:
+        items:
+          type: integer
+        type: array
+      date_creation:
+        type: string
+      desc:
+        type: string
+      rating:
+        type: integer
+      title:
+        type: string
+    type: object
+  model.FilmMinInfo:
+    properties:
+      date_creation:
+        type: string
+      desc:
+        type: string
+      rating:
+        type: integer
+      title:
+        type: string
+    type: object
+  model.FilmWithActors:
+    properties:
+      actors:
+        items:
+          $ref: '#/definitions/model.Actor'
+        type: array
+      date_creation:
+        type: string
+      desc:
+        type: string
+      rating:
+        type: integer
+      title:
+        type: string
+    type: object
 host: localhost:8080
 info:
   contact: {}
   description: API Server fo VK Test Task
   title: VK Test API
   version: "1.0"
-paths: {}
+paths:
+  /actors:
+    get:
+      description: получить список всех актеров, с фильмами где они снимались
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.ActorWithFilms'
+            type: array
+        "400":
+          description: Bad Request
+        "405":
+          description: Method Not Allowed
+        "500":
+          description: Internal Server Error
+      summary: GetActors
+      tags:
+      - actors
+  /actors/{actor_id}/delete:
+    delete:
+      description: удаление актера
+      parameters:
+      - description: идентификатор актера
+        in: path
+        name: actor_id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "405":
+          description: Method Not Allowed
+        "500":
+          description: Internal Server Error
+      security:
+      - BasicAuth: []
+      summary: DeleteActor
+      tags:
+      - actors
+  /actors/{actor_id}/update:
+    put:
+      consumes:
+      - application/json
+      description: обновление информации об актере
+      parameters:
+      - description: идентификатор актера
+        in: path
+        name: actor_id
+        required: true
+        type: integer
+      - description: данные актера
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.Actor'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "405":
+          description: Method Not Allowed
+        "500":
+          description: Internal Server Error
+      security:
+      - BasicAuth: []
+      summary: UpdateActor
+      tags:
+      - actors
+  /actors/create:
+    post:
+      consumes:
+      - application/json
+      description: создание актера
+      parameters:
+      - description: данные актера
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.Actor'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+        "405":
+          description: Method Not Allowed
+        "500":
+          description: Internal Server Error
+      security:
+      - BasicAuth: []
+      summary: CreateActor
+      tags:
+      - actors
+  /films:
+    get:
+      description: получить список всех фильмов
+      parameters:
+      - description: ключ сортировки результата
+        enum:
+        - title
+        - date_creation
+        - rating
+        in: query
+        name: sort_key
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.FilmWithActors'
+            type: array
+        "400":
+          description: Bad Request
+        "405":
+          description: Method Not Allowed
+        "500":
+          description: Internal Server Error
+      summary: GetFilm
+      tags:
+      - films
+  /films/{film_id}/delete:
+    delete:
+      description: удаление фильма
+      parameters:
+      - description: идентификатор фильма
+        in: path
+        name: film_id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "405":
+          description: Method Not Allowed
+        "500":
+          description: Internal Server Error
+      security:
+      - BasicAuth: []
+      summary: DeleteFilm
+      tags:
+      - films
+  /films/{film_id}/update:
+    put:
+      consumes:
+      - application/json
+      description: обновление информации о фильме
+      parameters:
+      - description: идентификатор фильма
+        in: path
+        name: film_id
+        required: true
+        type: integer
+      - description: данные фильма
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.Film'
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "405":
+          description: Method Not Allowed
+        "500":
+          description: Internal Server Error
+      security:
+      - BasicAuth: []
+      summary: UpdateFilm
+      tags:
+      - films
+  /films/create:
+    post:
+      consumes:
+      - application/json
+      description: создание фильма
+      parameters:
+      - description: данные фильма
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/model.Film'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: integer
+        "400":
+          description: Bad Request
+        "405":
+          description: Method Not Allowed
+        "500":
+          description: Internal Server Error
+      security:
+      - BasicAuth: []
+      summary: CreateFilm
+      tags:
+      - films
+  /films/search:
+    get:
+      description: найти фильмы по фрагменту названия или имени актера
+      parameters:
+      - description: по какому параметру будет идти поиск
+        enum:
+        - title
+        - actor_name
+        in: query
+        name: parametr
+        required: true
+        type: string
+      - description: фрагмент поиска
+        in: query
+        name: search-query
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/model.FilmWithActors'
+            type: array
+        "400":
+          description: Bad Request
+        "405":
+          description: Method Not Allowed
+        "500":
+          description: Internal Server Error
+      summary: SearchFilms
+      tags:
+      - films
 securityDefinitions:
   BasicAuth:
     type: basic

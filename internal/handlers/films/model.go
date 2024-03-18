@@ -35,14 +35,16 @@ type CreateFilmResponce struct {
 
 // @Summary CreateFilm
 // @Security BasicAuth
-// @Tags auth
+// @Tags films
 // @Description создание фильма
 // @Accept json
 // @Produce json
 // @Param input body model.Film true "данные фильма"
 // @Success 200 {integer} integer 1
-// @Router /actors/create [post]
-
+// @Failure 400
+// @Failure 405
+// @Failure 500
+// @Router /films/create [post]
 func (h *Handler) CreateFilm(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		film := new(model.Film)
@@ -68,6 +70,16 @@ func (h *Handler) CreateFilm(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// @Summary DeleteFilm
+// @Security BasicAuth
+// @Tags films
+// @Description удаление фильма
+// @Param film_id path int true "идентификатор фильма"
+// @Success 200
+// @Failure 400
+// @Failure 405
+// @Failure 500
+// @Router /films/{film_id}/delete [delete]
 func (h *Handler) DeleteFilm(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodDelete {
 		var err error
@@ -94,6 +106,18 @@ func (h *Handler) DeleteFilm(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// @Summary UpdateFilm
+// @Security BasicAuth
+// @Tags films
+// @Description обновление информации о фильме
+// @Accept json
+// @Param film_id path int true "идентификатор фильма"
+// @Param input body model.Film true "данные фильма"
+// @Success 200
+// @Failure 400
+// @Failure 405
+// @Failure 500
+// @Router /films/{film_id}/update [put]
 func (h *Handler) UpdateFilm(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPut {
 		var err error
@@ -135,6 +159,16 @@ func (h *Handler) UpdateFilm(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// @Summary GetFilm
+// @Tags films
+// @Description получить список всех фильмов
+// @Produce json
+// @Param sort_key query string false "ключ сортировки результата" Enums(title, date_creation, rating)
+// @Success 200 {array} model.FilmWithActors
+// @Failure 400
+// @Failure 405
+// @Failure 500
+// @Router /films [get]
 func (h *Handler) GetFilms(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodGet {
 		sortKey := req.URL.Query().Get("sort_key")
@@ -160,6 +194,17 @@ func (h *Handler) GetFilms(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// @Summary SearchFilms
+// @Tags films
+// @Description найти фильмы по фрагменту названия или имени актера
+// @Produce json
+// @Param parametr query string true "по какому параметру будет идти поиск" Enums(title, actor_name)
+// @Param search-query query string true "фрагмент поиска"
+// @Success 200 {array} model.FilmWithActors
+// @Failure 400
+// @Failure 405
+// @Failure 500
+// @Router /films/search [get]
 func (h *Handler) SearchFilms(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodGet {
 		searchWay := req.URL.Query().Get("parametr")

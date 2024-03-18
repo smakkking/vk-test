@@ -1,9 +1,11 @@
 version: "3.9"
 services:
   my_app:
-    build: .
     container_name: my_app
 
+    build: .
+    depends_on:
+      - postgres
     ports:
       - "8080:8080"
 
@@ -11,8 +13,8 @@ services:
       - postgres
 
   postgres:
-    image: postgres:13.3
     container_name: my_postgres
+    image: postgres:13.3
 
     environment:
       POSTGRES_DB: "vk"
@@ -23,7 +25,6 @@ services:
     restart: always
 
     volumes:
-      # - .:/docker-entrypoint-initdb.d
       - postgres_db:/var/lib/postgresql/data
 
     ports:

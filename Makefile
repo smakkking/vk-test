@@ -11,12 +11,16 @@ run: build
 	./${APP_NAME}
 
 deploy: create-migrator
-	docker-compose up -d
+	docker-compose up -d --build
 	sleep 4
 	docker run --network host migrator  \
 	-path=/migrations/ \
 	-database "postgresql://postgres:postgres@localhost:7557/vk?sslmode=disable" up
 	
+.PHONY: gen_docs
+gen_docs:
+	/home/andreysm/go/bin/swag init -g ./cmd/service/service.go
+
 .PHONY: create-migrator
 create-migrator:
 	docker build -t migrator ./db

@@ -10,8 +10,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	_ "github.com/smakkking/vk_test/docs" // без этого работать не будет - нужен путь именно к вашей документации
-	"github.com/swaggo/http-swagger/v2"
+	_ "vk_test/docs" // без этого работать не будет - нужен путь именно к вашей документации
+
+	httpSwagger "github.com/swaggo/http-swagger/v2"
 )
 
 type HTTPService struct {
@@ -29,6 +30,7 @@ func NewServer(cfg app.Config, mux *http.ServeMux) *HTTPService {
 	rStore := make([]User, 0)
 	rStore = append(rStore, User{Name: "alex", Password: "12345", Role: "admin"})
 	rStore = append(rStore, User{Name: "dave", Password: "1200005", Role: "user"})
+	rStore = append(rStore, User{Name: "kirril", Password: "23049", Role: "user"})
 
 	return &HTTPService{
 		srv: http.Server{
@@ -75,6 +77,6 @@ func (h *HTTPService) SetupHTTPService(
 	mux.HandleFunc("/films/{id}/update", reqIDMiddleware(h.authenticateAdmin(filmsHandler.UpdateFilm)))
 
 	mux.HandleFunc("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("http://localhost:1323/swagger/doc.json"), //The url pointing to API definition
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"), //The url pointing to API definition
 	))
 }
