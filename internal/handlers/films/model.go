@@ -2,13 +2,15 @@ package films
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
 	"vk_test/internal/handlers"
 	"vk_test/internal/model"
 	"vk_test/internal/services/films"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Handler struct {
@@ -21,6 +23,12 @@ func NewHandler(service *films.Service) *Handler {
 	}
 }
 
+var (
+	ErrIncorrectID  = errors.New("некорректный идентификатор")
+	ErrInvalidData  = errors.New("неправильные данные: несовпадение по параметрам")
+	ErrServiceError = errors.New("при обработке произошла ошибка")
+)
+
 type CreateFilmResponce struct {
 	ID int `json:"id"`
 }
@@ -30,21 +38,23 @@ func (h *Handler) CreateFilm(w http.ResponseWriter, req *http.Request) {
 		film := new(model.Film)
 		err := json.NewDecoder(req.Body).Decode(&film)
 		if err != nil {
-			http.Error(w, "invalid data", http.StatusBadRequest)
+			logrus.Errorf("handlers.CreateFilm: %v", err.Error())
+			http.Error(w, ErrInvalidData.Error(), http.StatusBadRequest)
 			return
 		}
 
 		film_id, err := h.serviceFilms.CreateFilm(film)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error while creating film %v", err.Error()), http.StatusInternalServerError)
+			http.Error(w, ErrServiceError.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		handlers.SendJSON(w, CreateFilmResponce{ID: film_id}, "error while creating film %v")
+		handlers.SendJSON(w, CreateFilmResponce{ID: film_id})
 		w.WriteHeader(http.StatusOK)
 
 	} else {
-		http.Error(w, fmt.Sprintf("expect method POST at %s, got %v", req.URL.Path, req.Method), http.StatusMethodNotAllowed)
+		logrus.Errorf("expect method POST at %s, got %v", req.URL.Path, req.Method)
+		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -56,19 +66,21 @@ func (h *Handler) DeleteFilm(w http.ResponseWriter, req *http.Request) {
 		pathParts := strings.Split(path, "/")
 		id, err := strconv.Atoi(pathParts[1])
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error while deleting film %v", err.Error()), http.StatusInternalServerError)
+			logrus.Errorf("handlers.DeleteFilm: %v", err.Error())
+			http.Error(w, ErrIncorrectID.Error(), http.StatusBadRequest)
 			return
 		}
 
 		err = h.serviceFilms.DeleteFilm(id)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error while deleting film %v", err.Error()), http.StatusInternalServerError)
+			http.Error(w, ErrServiceError.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 	} else {
-		http.Error(w, fmt.Sprintf("expect method DELETE at %s, got %v", req.URL.Path, req.Method), http.StatusMethodNotAllowed)
+		logrus.Errorf("expect method DELETE at %s, got %v", req.URL.Path, req.Method)
+		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -80,14 +92,16 @@ func (h *Handler) UpdateFilm(w http.ResponseWriter, req *http.Request) {
 		pathParts := strings.Split(path, "/")
 		id, err := strconv.Atoi(pathParts[1])
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error while updating film %v", err.Error()), http.StatusInternalServerError)
+			logrus.Errorf("handlers.UpdateFilm: %v", err.Error())
+			http.Error(w, ErrIncorrectID.Error(), http.StatusBadRequest)
 			return
 		}
 
 		film := new(model.FilmPartialUpdate)
 		err = json.NewDecoder(req.Body).Decode(&film)
 		if err != nil {
-			http.Error(w, "invalid data", http.StatusBadRequest)
+			logrus.Errorf("handlers.UpdateFilm: %v", err.Error())
+			http.Error(w, ErrInvalidData.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -99,14 +113,15 @@ func (h *Handler) UpdateFilm(w http.ResponseWriter, req *http.Request) {
 
 		err = h.serviceFilms.UpdateFilm(id, film)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error while deleting film %v", err.Error()), http.StatusInternalServerError)
+			http.Error(w, ErrServiceError.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 
 	} else {
-		http.Error(w, fmt.Sprintf("expect method PUT at %s, got %v", req.URL.Path, req.Method), http.StatusMethodNotAllowed)
+		logrus.Errorf("expect method PUT at %s, got %v", req.URL.Path, req.Method)
+		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -122,15 +137,16 @@ func (h *Handler) GetFilms(w http.ResponseWriter, req *http.Request) {
 
 		films, err := h.serviceFilms.GetFilmsSorted(sortKey)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error while getting film %v", err.Error()), http.StatusInternalServerError)
+			http.Error(w, ErrServiceError.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		handlers.SendJSON(w, films, "error while getting film %v")
+		handlers.SendJSON(w, films)
 		w.WriteHeader(http.StatusOK)
 
 	} else {
-		http.Error(w, fmt.Sprintf("expect method GET at %s, got %v", req.URL.Path, req.Method), http.StatusMethodNotAllowed)
+		logrus.Errorf("expect method GET at %s, got %v", req.URL.Path, req.Method)
+		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -146,23 +162,24 @@ func (h *Handler) SearchFilms(w http.ResponseWriter, req *http.Request) {
 		case "title":
 			result, err = h.serviceFilms.SearchFilmByTitle(searchPattern)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("error while search films %v", err.Error()), http.StatusInternalServerError)
+				http.Error(w, ErrServiceError.Error(), http.StatusInternalServerError)
 				return
 			}
 		case "actor_name":
 			result, err = h.serviceFilms.SearchFilmsByActorName(searchPattern)
 			if err != nil {
-				http.Error(w, fmt.Sprintf("error while search films %v", err.Error()), http.StatusInternalServerError)
+				http.Error(w, ErrServiceError.Error(), http.StatusInternalServerError)
 				return
 			}
 		default:
 			http.Error(w, "no such search parametr", http.StatusBadRequest)
 		}
 
-		handlers.SendJSON(w, result, "error while search films %v")
+		handlers.SendJSON(w, result)
 		w.WriteHeader(http.StatusOK)
 
 	} else {
-		http.Error(w, fmt.Sprintf("expect method GET at %s, got %v", req.URL.Path, req.Method), http.StatusMethodNotAllowed)
+		logrus.Errorf("expect method GET at %s, got %v", req.URL.Path, req.Method)
+		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
 }

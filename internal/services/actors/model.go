@@ -1,8 +1,9 @@
 package actors
 
 import (
-	"fmt"
 	"vk_test/internal/model"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Service struct {
@@ -19,7 +20,8 @@ type Storage interface {
 func (s *Service) CreateActor(actor *model.Actor) (int, error) {
 	id, err := s.actorStorage.CreateActor(actor)
 	if err != nil {
-		return 0, fmt.Errorf("can't create actor: %w", err)
+		logrus.Errorf("can't create actor: %v", err)
+		return 0, err
 	}
 
 	return id, nil
@@ -28,7 +30,8 @@ func (s *Service) CreateActor(actor *model.Actor) (int, error) {
 func (s *Service) DeleteActor(actorID int) error {
 	err := s.actorStorage.DeleteActor(actorID)
 	if err != nil {
-		return fmt.Errorf("can't delete actor: %w", err)
+		logrus.Errorf("can't delete actor: %v", err)
+		return err
 	}
 
 	return nil
@@ -37,7 +40,8 @@ func (s *Service) DeleteActor(actorID int) error {
 func (s *Service) UpdateActor(id int, newActor *model.ActorPartialUpdate) error {
 	err := s.actorStorage.UpdateActor(id, newActor)
 	if err != nil {
-		return fmt.Errorf("can't update actor: %w", err)
+		logrus.Errorf("can't update actor: %v", err)
+		return err
 	}
 
 	return nil
@@ -46,7 +50,8 @@ func (s *Service) UpdateActor(id int, newActor *model.ActorPartialUpdate) error 
 func (s *Service) GetActors() ([]*model.ActorWithFilms, error) {
 	result, err := s.actorStorage.GetActorsWithFilms()
 	if err != nil {
-		return nil, fmt.Errorf("can't get actors: %w", err)
+		logrus.Errorf("can't get actor: %v", err)
+		return nil, err
 	}
 
 	return result, nil

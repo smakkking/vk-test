@@ -2,23 +2,34 @@ package actors
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"vk_test/internal/handlers"
 	"vk_test/internal/model"
 	"vk_test/internal/services/actors"
+
+	"github.com/sirupsen/logrus"
 )
 
 type Handler struct {
 	serviceActors *actors.Service
 }
 
+var (
+	ErrIncorrectID  = errors.New("некорректный идентификатор")
+	ErrInvalidData  = errors.New("неправильные данные: несовпадение по параметрам")
+	ErrServiceError = errors.New("при обработке произошла ошибка")
+)
+
 func NewHandler(service *actors.Service) *Handler {
 	return &Handler{
 		serviceActors: service,
 	}
 }
+
 func (h *Handler) UpdateActor(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPut {
 		var err error
@@ -27,14 +38,16 @@ func (h *Handler) UpdateActor(w http.ResponseWriter, req *http.Request) {
 		pathParts := strings.Split(path, "/")
 		id, err := strconv.Atoi(pathParts[1])
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error while updating actor %v", err.Error()), http.StatusInternalServerError)
+			logrus.Errorf("handlers.UpdateActor: %v", err.Error())
+			http.Error(w, ErrIncorrectID.Error(), http.StatusBadRequest)
 			return
 		}
 
 		oldActor := new(model.ActorPartialUpdate)
 		err = json.NewDecoder(req.Body).Decode(&oldActor)
 		if err != nil {
-			http.Error(w, "invalid data", http.StatusBadRequest)
+			logrus.Errorf("handlers.UpdateActor: %v", err.Error())
+			http.Error(w, ErrInvalidData.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -44,14 +57,15 @@ func (h *Handler) UpdateActor(w http.ResponseWriter, req *http.Request) {
 
 		err = h.serviceActors.UpdateActor(id, oldActor)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error while updating actor %v", err.Error()), http.StatusInternalServerError)
+			http.Error(w, ErrServiceError.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 
 	} else {
-		http.Error(w, fmt.Sprintf("expect method PUT at %s, got %v", req.URL.Path, req.Method), http.StatusMethodNotAllowed)
+		logrus.Errorf("expect method PUT at %s, got %v", req.URL.Path, req.Method)
+		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -63,19 +77,20 @@ func (h *Handler) DeleteActor(w http.ResponseWriter, req *http.Request) {
 		pathParts := strings.Split(path, "/")
 		id, err := strconv.Atoi(pathParts[1])
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error while deleting actor %v", err.Error()), http.StatusInternalServerError)
+			logrus.Errorf("handlers.DeleteActor: %v", err.Error())
+			http.Error(w, ErrIncorrectID.Error(), http.StatusBadRequest)
 			return
 		}
 
 		err = h.serviceActors.DeleteActor(id)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error while deleting actor %v", err.Error()), http.StatusInternalServerError)
+			http.Error(w, ErrServiceError.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		w.WriteHeader(http.StatusOK)
 	} else {
-		http.Error(w, fmt.Sprintf("expect method DELETE at %s, got %v", req.URL.Path, req.Method), http.StatusMethodNotAllowed)
+		logrus.Errorf("expect method DELETE at %s, got %v", req.URL.Path, req.Method)
 	}
 }
 
@@ -88,21 +103,23 @@ func (h *Handler) CreateActor(w http.ResponseWriter, req *http.Request) {
 		actor := new(model.Actor)
 		err := json.NewDecoder(req.Body).Decode(&actor)
 		if err != nil {
-			http.Error(w, "invalid data", http.StatusBadRequest)
+			logrus.Errorf("handlers.CreateActor: %v", err.Error())
+			http.Error(w, ErrInvalidData.Error(), http.StatusBadRequest)
 			return
 		}
 
 		actor_id, err := h.serviceActors.CreateActor(actor)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("error while creating actor %v", err.Error()), http.StatusInternalServerError)
+			http.Error(w, ErrServiceError.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		sendJSON(w, CreateActorResponce{ID: actor_id}, "error while creating actor %v")
+		handlers.SendJSON(w, CreateActorResponce{ID: actor_id})
 		w.WriteHeader(http.StatusOK)
 
 	} else {
-		http.Error(w, fmt.Sprintf("expect method POST at %s, got %v", req.URL.Path, req.Method), http.StatusMethodNotAllowed)
+		logrus.Errorf("expect method POST at %s, got %v", req.URL.Path, req.Method)
+		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -114,25 +131,10 @@ func (h *Handler) GetActors(w http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		sendJSON(w, actors, "error while getting actor %v")
+		handlers.SendJSON(w, actors)
 		w.WriteHeader(http.StatusOK)
 	} else {
-		http.Error(w, fmt.Sprintf("expect method GET at %s, got %v", req.URL.Path, req.Method), http.StatusMethodNotAllowed)
+		logrus.Errorf("expect method GET at %s, got %v", req.URL.Path, req.Method)
+		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
-}
-
-func sendJSON(w http.ResponseWriter, payload interface{}, errorMessage string) {
-	data, err := json.Marshal(payload)
-	if err != nil {
-		http.Error(w, fmt.Sprintf(errorMessage, err.Error()), http.StatusInternalServerError)
-		return
-	}
-
-	_, err = w.Write(data)
-	if err != nil {
-		http.Error(w, fmt.Sprintf(errorMessage, err.Error()), http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Add("Content-Type", "application/json")
 }

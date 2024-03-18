@@ -2,12 +2,13 @@ package httpserver
 
 import (
 	"context"
-	"log"
 	"net/http"
 
 	"vk_test/internal/app"
 	"vk_test/internal/handlers/actors"
 	"vk_test/internal/handlers/films"
+
+	"github.com/sirupsen/logrus"
 )
 
 type HTTPService struct {
@@ -29,7 +30,7 @@ func NewServer(cfg app.Config, mux *http.ServeMux) *HTTPService {
 func (h *HTTPService) Run() {
 	err := h.srv.ListenAndServe()
 	if err != nil {
-		log.Fatalf("cannot start server: %s", err)
+		logrus.Errorf("cannot start server: %s", err.Error())
 	}
 }
 
@@ -44,17 +45,17 @@ func (h *HTTPService) SetupHTTPService(
 	filmsHandler *films.Handler,
 ) {
 	// ---ACTORS---
-	mux.HandleFunc("/actors", actorHandler.GetActors)
+	mux.HandleFunc("/actors", reqIDMiddleware(actorHandler.GetActors))
 
-	mux.HandleFunc("/actors/create", actorHandler.CreateActor)
-	mux.HandleFunc("/actors/{id}/delete", actorHandler.DeleteActor)
-	mux.HandleFunc("/actors/{id}/update", actorHandler.UpdateActor)
+	mux.HandleFunc("/actors/create", reqIDMiddleware(actorHandler.CreateActor))
+	mux.HandleFunc("/actors/{id}/delete", reqIDMiddleware(actorHandler.DeleteActor))
+	mux.HandleFunc("/actors/{id}/update", reqIDMiddleware(actorHandler.UpdateActor))
 
 	// ---FILMS---
-	mux.HandleFunc("/films", filmsHandler.GetFilms)
-	mux.HandleFunc("/films/search", filmsHandler.SearchFilms)
+	mux.HandleFunc("/films", reqIDMiddleware(filmsHandler.GetFilms))
+	mux.HandleFunc("/films/search", reqIDMiddleware(filmsHandler.SearchFilms))
 
-	mux.HandleFunc("/films/create", filmsHandler.CreateFilm)
-	mux.HandleFunc("/films/{id}/delete", filmsHandler.DeleteFilm)
-	mux.HandleFunc("/films/{id}/update", filmsHandler.UpdateFilm)
+	mux.HandleFunc("/films/create", reqIDMiddleware(filmsHandler.CreateFilm))
+	mux.HandleFunc("/films/{id}/delete", reqIDMiddleware(filmsHandler.DeleteFilm))
+	mux.HandleFunc("/films/{id}/update", reqIDMiddleware(filmsHandler.UpdateFilm))
 }

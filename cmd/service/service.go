@@ -27,6 +27,7 @@ func main() {
 		},
 	)
 	logrus.SetOutput(os.Stdout)
+	logrus.Infoln("service started...")
 
 	// init config
 	config, err := app.NewConfig(configPath)
@@ -41,16 +42,19 @@ func main() {
 		logrus.Errorf("error connecting to db: %s", err.Error())
 		os.Exit(1)
 	}
+	logrus.Infoln("connected to DB...")
 
 	// init services
 	actorService := serviceActors.NewService(mainStorage)
 	filmService := serviceFilms.NewService(mainStorage)
+	logrus.Infoln("services initialized...")
 
 	// init handlers
 	actorHandler := handlerActors.NewHandler(actorService)
 	filmsHandler := handlerFilms.NewHandler(filmService)
 
 	mux := http.NewServeMux()
+	logrus.Infoln("handlers initialized...")
 
 	// start server
 	srv := httpserver.NewServer(config, mux)
