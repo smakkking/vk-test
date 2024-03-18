@@ -33,6 +33,16 @@ type CreateFilmResponce struct {
 	ID int `json:"id"`
 }
 
+// @Summary CreateFilm
+// @Security BasicAuth
+// @Tags auth
+// @Description создание фильма
+// @Accept json
+// @Produce json
+// @Param input body model.Film true "данные фильма"
+// @Success 200 {integer} integer 1
+// @Router /actors/create [post]
+
 func (h *Handler) CreateFilm(w http.ResponseWriter, req *http.Request) {
 	if req.Method == http.MethodPost {
 		film := new(model.Film)

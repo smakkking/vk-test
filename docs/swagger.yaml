@@ -1,0 +1,12 @@
+basePath: /
+host: localhost:8080
+info:
+  contact: {}
+  description: API Server fo VK Test Task
+  title: VK Test API
+  version: "1.0"
+paths: {}
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

@@ -9,6 +9,9 @@ import (
 	"vk_test/internal/handlers/films"
 
 	"github.com/sirupsen/logrus"
+
+	_ "github.com/smakkking/vk_test/docs" // без этого работать не будет - нужен путь именно к вашей документации
+	"github.com/swaggo/http-swagger/v2"
 )
 
 type HTTPService struct {
@@ -70,4 +73,8 @@ func (h *HTTPService) SetupHTTPService(
 	mux.HandleFunc("/films/create", reqIDMiddleware(h.authenticateAdmin(filmsHandler.CreateFilm)))
 	mux.HandleFunc("/films/{id}/delete", reqIDMiddleware(h.authenticateAdmin(filmsHandler.DeleteFilm)))
 	mux.HandleFunc("/films/{id}/update", reqIDMiddleware(h.authenticateAdmin(filmsHandler.UpdateFilm)))
+
+	mux.HandleFunc("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:1323/swagger/doc.json"), //The url pointing to API definition
+	))
 }

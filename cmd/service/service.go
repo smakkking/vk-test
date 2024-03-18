@@ -18,6 +18,17 @@ const (
 	configPath = "./config/config.yaml"
 )
 
+// @title VK Test API
+// @version 1.0
+// @description API Server fo VK Test Task
+
+// @host localhost:8080
+// @basepath /
+
+// @securitydefinitions.basic BasicAuth
+// @in header
+// @name Authorization
+
 func main() {
 	// logger setup
 	logrus.SetFormatter(
