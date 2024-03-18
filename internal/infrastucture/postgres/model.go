@@ -15,10 +15,10 @@ func (s *Storage) CreateActor(actor *model.Actor) (int, error) {
 	var id int
 
 	err := s.db.QueryRow(
-		"INSERT INTO Actors(a_id, a_name, a_sex, a_birth_date) VALUES ($1, $2, $3) RETURNING a_id",
+		"INSERT INTO Actors(a_name, a_sex, a_birth_date) VALUES ($1, $2, $3) RETURNING a_id",
 		actor.Name,
 		actor.Sex,
-		actor.DateBirth,
+		time.Time(actor.DateBirth),
 	).Scan(&id)
 
 	if err != nil {
@@ -50,7 +50,7 @@ func (s *Storage) UpdateActor(actorID int, actor *model.ActorPartialUpdate) erro
 		b.String(),
 		actor.NameBool, actor.Name,
 		actor.SexBool, actor.Sex,
-		actor.DateBirthBool, actor.DateBirth,
+		actor.DateBirthBool, time.Time(actor.DateBirth),
 	)
 	if err != nil {
 		return err
@@ -69,10 +69,10 @@ func (s *Storage) CreateFilm(film *model.Film) (int, error) {
 
 	// вставка инфы о фильме
 	err = tX.QueryRow(
-		"INSERT INTO Films(f_id, f_title, f_desc, f_date_creation, f_rating) VALUES ($1, $2, $3, $4) RETURNING f_id",
+		"INSERT INTO Films(f_title, f_desc, f_date_creation, f_rating) VALUES ($1, $2, $3, $4) RETURNING f_id",
 		film.Title,
 		film.Description,
-		film.DateCreation,
+		time.Time(film.DateCreation),
 		film.Rating,
 	).Scan(&id)
 	if err != nil {
@@ -128,7 +128,7 @@ func (s *Storage) UpdateFilm(filmID int, film *model.FilmPartialUpdate) error {
 		b.String(),
 		film.TitleBool, film.Title,
 		film.DescriptionBool, film.Description,
-		film.DateCreationBool, film.DateCreation,
+		film.DateCreationBool, time.Time(film.DateCreation),
 		film.RatingBool, film.Rating,
 		filmID,
 	)
@@ -202,7 +202,7 @@ func (s *Storage) GetFilmsSorted(sortKey string) ([]*model.FilmWithActors, error
 			result = append(result, &model.FilmWithActors{
 				Title:        filmTitle,
 				Description:  filmDescription,
-				DateCreation: filmDateCreation,
+				DateCreation: model.CivilTime(filmDateCreation),
 				Rating:       filmRating,
 				ActorList:    make([]*model.Actor, 0),
 			})
@@ -213,7 +213,7 @@ func (s *Storage) GetFilmsSorted(sortKey string) ([]*model.FilmWithActors, error
 			&model.Actor{
 				Name:      actorName,
 				Sex:       actorSex,
-				DateBirth: actorDateBirth,
+				DateBirth: model.CivilTime(actorDateBirth),
 			},
 		)
 
@@ -264,7 +264,7 @@ func (s *Storage) SearchFilmsByActorName(actorName string) ([]*model.FilmWithAct
 			result = append(result, &model.FilmWithActors{
 				Title:        filmTitle,
 				Description:  filmDescription,
-				DateCreation: filmDateCreation,
+				DateCreation: model.CivilTime(filmDateCreation),
 				Rating:       filmRating,
 				ActorList:    make([]*model.Actor, 0),
 			})
@@ -275,7 +275,7 @@ func (s *Storage) SearchFilmsByActorName(actorName string) ([]*model.FilmWithAct
 			&model.Actor{
 				Name:      actorName,
 				Sex:       actorSex,
-				DateBirth: actorDateBirth,
+				DateBirth: model.CivilTime(actorDateBirth),
 			},
 		)
 
@@ -326,7 +326,7 @@ func (s *Storage) SearchFilmByTitle(filmTitle string) ([]*model.FilmWithActors, 
 			result = append(result, &model.FilmWithActors{
 				Title:        filmTitle,
 				Description:  filmDescription,
-				DateCreation: filmDateCreation,
+				DateCreation: model.CivilTime(filmDateCreation),
 				Rating:       filmRating,
 				ActorList:    make([]*model.Actor, 0),
 			})
@@ -337,7 +337,7 @@ func (s *Storage) SearchFilmByTitle(filmTitle string) ([]*model.FilmWithActors, 
 			&model.Actor{
 				Name:      actorName,
 				Sex:       actorSex,
-				DateBirth: actorDateBirth,
+				DateBirth: model.CivilTime(actorDateBirth),
 			},
 		)
 
@@ -387,7 +387,7 @@ func (s *Storage) GetActorsWithFilms() ([]*model.ActorWithFilms, error) {
 			result = append(result, &model.ActorWithFilms{
 				Name:      actorName,
 				Sex:       actorSex,
-				DateBirth: actorDateBirth,
+				DateBirth: model.CivilTime(actorDateBirth),
 				Films:     make([]*model.FilmMinInfo, 0),
 			})
 		}
@@ -397,7 +397,7 @@ func (s *Storage) GetActorsWithFilms() ([]*model.ActorWithFilms, error) {
 			&model.FilmMinInfo{
 				Title:        filmTitle,
 				Description:  filmDescription,
-				DateCreation: filmDateCreation,
+				DateCreation: model.CivilTime(filmDateCreation),
 				Rating:       filmRating,
 			},
 		)

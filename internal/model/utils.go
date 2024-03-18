@@ -11,6 +11,10 @@ const (
 	dateFormat = "02-01-2006"
 )
 
+func (c CivilTime) IsZero() bool {
+	return time.Time(c).IsZero()
+}
+
 func (c *CivilTime) UnmarshalJSON(b []byte) error {
 	value := strings.Trim(string(b), `"`) //get rid of "
 	if value == "" || value == "null" {
