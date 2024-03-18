@@ -37,12 +37,17 @@ func (s *Storage) DeleteActor(actorID int) error {
 
 func (s *Storage) UpdateActor(actorID int, actor *model.ActorPartialUpdate) error {
 	b := strings.Builder{}
+	// костыль
+	if actor.Sex == "" {
+		actor.Sex = "мужчина"
+	}
+
 	b.WriteString(`
 		UPDATE Actors 
 		SET 
 			a_name = CASE WHEN $1::boolean THEN $2::TEXT ELSE a_name END,
 			a_sex = CASE WHEN $3::boolean THEN $4::SEX ELSE a_sex END,
-			a_birth_date = CASE WHEN $5::boolean THEN $6::DATE ELSE a_birth_date END,
+			a_birth_date = CASE WHEN $5::boolean THEN $6::DATE ELSE a_birth_date END
 		WHERE a_id = $7;
 	`)
 
@@ -51,6 +56,7 @@ func (s *Storage) UpdateActor(actorID int, actor *model.ActorPartialUpdate) erro
 		actor.NameBool, actor.Name,
 		actor.SexBool, actor.Sex,
 		actor.DateBirthBool, time.Time(actor.DateBirth),
+		actorID,
 	)
 	if err != nil {
 		return err
@@ -113,7 +119,7 @@ func (s *Storage) UpdateFilm(filmID int, film *model.FilmPartialUpdate) error {
 		f_title = CASE WHEN $1::boolean THEN $2::VARCHAR(150) ELSE f_title END,
 		f_desc = CASE WHEN $3::boolean THEN $4::VARCHAR(1000) ELSE f_desc END,
 		f_date_creation = CASE WHEN $5::boolean THEN $6::DATE ELSE f_date_creation END,
-		f_rating = CASE WHEN $7::boolean THEN $8::INT ELSE f_rating END,
+		f_rating = CASE WHEN $7::boolean THEN $8::INT ELSE f_rating END
 		
 		WHERE a_id = $9;
 	`)

@@ -67,6 +67,8 @@ func (h *Handler) UpdateActor(w http.ResponseWriter, req *http.Request) {
 		oldActor.DateBirthBool = !oldActor.DateBirth.IsZero()
 		oldActor.SexBool = oldActor.Sex != ""
 
+		logrus.Infoln(oldActor)
+
 		err = h.serviceActors.UpdateActor(id, oldActor)
 		if err != nil {
 			http.Error(w, ErrServiceError.Error(), http.StatusInternalServerError)
@@ -113,6 +115,7 @@ func (h *Handler) DeleteActor(w http.ResponseWriter, req *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	} else {
 		logrus.Errorf("expect method DELETE at %s, got %v", req.URL.Path, req.Method)
+		http.Error(w, "", http.StatusMethodNotAllowed)
 	}
 }
 
