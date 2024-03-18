@@ -4,4 +4,6 @@ COPY . .
 
 RUN go build -mod vendor -o main ./cmd/service/service.go
 
+EXPOSE 8080
+
 CMD ["./main"]

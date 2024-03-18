@@ -23,7 +23,7 @@ services:
     restart: always
 
     volumes:
-      - .:/docker-entrypoint-initdb.d
+      # - .:/docker-entrypoint-initdb.d
       - postgres_db:/var/lib/postgresql/data
 
     ports:

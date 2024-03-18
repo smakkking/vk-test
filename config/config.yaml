@@ -5,7 +5,7 @@ HTTP_IDLE_TIMEOUT: 10s
 
 PG_HOST: "localhost"
 PG_PORT: "7557"
-PG_DBNAME: "my_db"
+PG_DBNAME: "vk"
 PG_USER: "postgres"
-PG_PASSWORD: "my-password"
+PG_PASSWORD: "postgres"
 PG_SSLMODE: "disable"
